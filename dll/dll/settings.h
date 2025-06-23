@@ -202,6 +202,8 @@ struct Branch_Info {
 class Settings {
 private:
     CSteamID steam_id{}; // user id
+    CSteamID ticket_id{}; // ticket id
+    std::string gate; // gate
     CGameID game_id{};
     std::string name{};
     std::string language{}; // default "english"
@@ -360,10 +362,14 @@ public:
 #endif
 
     Settings(CSteamID steam_id, CGameID game_id, const std::string &name, const std::string &language, bool offline);
+    
+    Settings(CSteamID steam_id, CGameID game_id, const std::string &name, const std::string &language, bool offline, CSteamID ticket_id, std::string gate);
 
     static std::string sanitize(const std::string &name);
 
     CSteamID get_local_steam_id();
+    CSteamID get_local_ticket_id();
+    std::string get_local_gate();
     CGameID get_local_game_id();
 
     const char *get_local_name();

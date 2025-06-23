@@ -86,10 +86,45 @@ Settings::Settings(CSteamID steam_id, CGameID game_id, const std::string &name, 
     this->offline = offline;
 }
 
+Settings::Settings(CSteamID steam_id, CGameID game_id, const std::string &name, const std::string &language, bool offline, CSteamID ticket_id, std::string gate)
+{
+    this->steam_id = steam_id;
+    this->ticket_id = ticket_id;
+    this->gate = gate;
+    this->game_id = game_id;
+    this->name = sanitize(name);
+    if (this->name.size() == 0) {
+        this->name = "  ";
+    }
+
+    if (this->name.size() == 1) {
+        this->name = this->name + " ";
+    }
+
+    auto lang = sanitize(language);
+    std::transform(lang.begin(), lang.end(), lang.begin(), ::tolower);
+    lang.erase(std::remove(lang.begin(), lang.end(), ' '), lang.end());
+    this->language = lang;
+
+    this->offline = offline;
+}
+
 // user id
 CSteamID Settings::get_local_steam_id()
 {
     return steam_id;
+}
+
+// ticket id
+CSteamID Settings::get_local_ticket_id()
+{
+    return ticket_id;
+}
+
+// gate
+std::string Settings::get_local_gate()
+{
+    return gate;
 }
 
 // game id

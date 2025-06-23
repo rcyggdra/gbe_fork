@@ -85,8 +85,62 @@ bool Steam_User::BConnected()
 CSteamID Steam_User::GetSteamID()
 {
     PRINT_DEBUG_ENTRY();
-    CSteamID id = settings->get_local_steam_id();
-    
+    static int callCount = 1;
+    std::string gate;
+    bool hasError = false;
+    gate = settings->get_local_gate();
+    CSteamID id; //Change to 3 will delete the ticket
+    if (gate != "0") {
+        std::vector<int> values;
+        std::stringstream items(gate);
+        std::string item;
+        while (std::getline(items, item, '|')) {
+            try {
+                values.push_back(std::stoi(item));
+            }
+            catch (const std::invalid_argument) {
+                hasError = true;
+                PRINT_DEBUG("GetSteamIDtest: Invalid Number %s", item);
+            }
+            catch (const std::out_of_range) {
+                hasError = true;
+                PRINT_DEBUG("GetSteamIDtest: Number Out of Range %s", item);
+            }
+        }
+        if (!hasError) {
+            if (std::find(values.begin(), values.end(), callCount) != values.end()) {
+                id = settings->get_local_ticket_id();
+            }
+            else {
+                id = settings->get_local_steam_id();
+            }
+        }
+        else {
+            if (callCount == 2 || callCount == 3) {
+                id = settings->get_local_ticket_id();
+            }
+            else {
+                id = settings->get_local_steam_id();
+            }
+        }
+        if (std::find(values.begin(), values.end(), callCount) != values.end()) {
+            id = settings->get_local_ticket_id();
+        }
+        else {
+            id = settings->get_local_steam_id();
+        }
+    }
+    else {
+
+        if (callCount == 2 || callCount == 3) {
+            id = settings->get_local_ticket_id();
+        }
+        else {
+            id = settings->get_local_steam_id();
+        }
+    }
+    PRINT_DEBUG("GetSteamIDtest: %i %i %llu %s", callCount, id, id.ConvertToUint64(), gate);
+    callCount++;
     return id;
 }
 

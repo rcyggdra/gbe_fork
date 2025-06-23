@@ -21,6 +21,8 @@
 #define SI_SUPPORT_IOSTREAMS
 #define SI_NO_MBCS
 #include "simpleini/SimpleIni.h"
+#include <regex>
+
 
 
 constexpr const static char config_ini_app[]     = "configs.app.ini";
@@ -660,6 +662,29 @@ static CSteamID parse_user_steam_id(class Local_Storage *local_storage)
     }
 
     return user_id;
+}
+
+// user::general::ticket_steamid
+static CSteamID parse_user_ticket_id(class Local_Storage *local_storage)
+{
+    CSteamID user_id((uint64)std::atoll(ini.GetValue("user::general", "ticket_steamid", "0")));
+    if (!user_id.IsValid()) {
+        user_id = parse_user_steam_id(local_storage);
+    }
+
+    return user_id;
+}
+
+// user::general::gate
+static std::string parse_user_gate(class Local_Storage* local_storage)
+{
+    std::string gate =ini.GetValue("user::general", "gate", "0");
+    if (gate.empty() || gate == "0" || !std::regex_match(gate, std::regex(R"(^(\d+)(\|\d+)*$)"))) {
+        return "0";
+    }
+    else {
+        return gate;
+    }
 }
 
 // user::general::language
@@ -1764,6 +1789,10 @@ uint32 create_localstorage_settings(Settings **settings_client_out, Settings **s
     std::string name(parse_account_name(local_storage));
     // Steam ID
     CSteamID user_id = parse_user_steam_id(local_storage);
+    // ticket ID
+    CSteamID ticket_id = parse_user_ticket_id(local_storage);
+    // gate
+    std::string gate = parse_user_gate(local_storage);
     // Language
     std::string language(parse_current_language(local_storage));
     // Supported languages, this will change the current language if needed
@@ -1773,8 +1802,8 @@ uint32 create_localstorage_settings(Settings **settings_client_out, Settings **s
     if (steam_offline_mode) {
         PRINT_DEBUG("setting emu to offline mode");
     }
-    Settings *settings_client = new Settings(user_id, CGameID(appid), name, language, steam_offline_mode);
-    Settings *settings_server = new Settings(generate_steam_id_server(), CGameID(appid), name, language, steam_offline_mode);
+    Settings *settings_client = new Settings(user_id, CGameID(appid), name, language, steam_offline_mode, ticket_id, gate);
+    Settings *settings_server = new Settings(generate_steam_id_server(), CGameID(appid), name, language, steam_offline_mode, ticket_id, gate);
 
     // listen port
     settings_client->set_port(port);
